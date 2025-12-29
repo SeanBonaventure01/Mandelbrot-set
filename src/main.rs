@@ -4,24 +4,45 @@ use winit::event::WindowEvent;
 use winit::event_loop::{ActiveEventLoop, EventLoop};
 use winit::window::{Window, WindowId};
 use winit::dpi::LogicalSize;
+use pixels::Pixels;
+use pixels::SurfaceTexture;
 
 const WIDTH: u32 = 640;
 const HEIGHT: u32 = 480;
 
-struct MandelbrotApp{
-    window: Option<Window>
+struct MandelbrotApp<'a>{
+    window: Option<Window>,
+    pixel_buff: Option<Pixels<'a>>
 }
 
-impl MandelbrotApp {
+impl<'a> MandelbrotApp<'a> {
     pub fn new() -> Self
     {
         MandelbrotApp {
-            window: None
+            window: None,
+            pixel_buff: None
+        }
+    }
+
+    pub fn draw(&mut self) 
+    {
+        println!("Drawing");
+
+        if let Some(buff) = &mut self.pixel_buff {
+                // Clear the pixel buffer
+                //let frame = buff.frame_mut();
+                for pixel in buff.frame_mut().chunks_exact_mut(4) {
+                    pixel[0] = 0x00; // R
+                    pixel[1] = 0x00; // G
+                    pixel[2] = 0x00; // B
+                    pixel[3] = 0xff; // A
+                }
+                buff.render();
         }
     }
 }
 
-impl ApplicationHandler for MandelbrotApp {
+impl<'a> ApplicationHandler for MandelbrotApp<'a> {
     // Required methods
     fn resumed(&mut self, event_loop: &ActiveEventLoop)
     {
@@ -30,7 +51,10 @@ impl ApplicationHandler for MandelbrotApp {
             .with_inner_size(winit::dpi::LogicalSize::new(WIDTH, HEIGHT))
             .with_resizable(false)
             .with_blur(true);
-        self.window = Some(event_loop.create_window(window_attributes).unwrap());
+        let window = event_loop.create_window(window_attributes).unwrap();
+        
+        self.pixel_buff = Some(Pixels::new(WIDTH, HEIGHT, SurfaceTexture::new(WIDTH, HEIGHT, window)).unwrap());
+        self.draw();
     }
 
     fn window_event(
@@ -45,8 +69,11 @@ impl ApplicationHandler for MandelbrotApp {
                 println!("Close was requested; stopping");
                 event_loop.exit();
             },
+            WindowEvent::RedrawRequested => {
+                println!("Redrawing!");
+            }
             _ => {
-                println!("Unhandled event: {:?}", event);
+                //println!("Unhandled event: {:?}", event);
             },
         }
     }

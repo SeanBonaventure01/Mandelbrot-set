@@ -6,3 +6,6 @@ edition = "2024"
 [dependencies]
 num-complex = "0.4"
 winit = "0.30"
+egui = "*"
+egui-winit = "*"
+pixels = "*"
