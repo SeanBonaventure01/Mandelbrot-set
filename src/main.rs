@@ -125,11 +125,11 @@ fn main()
          3.0,
          2.0,
          -0.5,
-         0.0,
+         0.25,
          50);
 
-    //mandelbrot_app.update_mandelbrot_values(mandelbrot::compute_set_vals_multithreaded(params, 1));
-    mandelbrot_app.update_mandelbrot_values(mandelbrot::compute_set_vals_naive(params));
+    mandelbrot_app.update_mandelbrot_values(mandelbrot::compute_set_vals_multithreaded(params, 4));
+    //mandelbrot_app.update_mandelbrot_values(mandelbrot::compute_set_vals_naive(params));
     let duration = start.elapsed();
     println!("Time elapsed: {:?}", duration);
     let _ = event_loop.run_app(&mut mandelbrot_app);

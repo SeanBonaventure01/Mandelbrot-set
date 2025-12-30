@@ -1,5 +1,6 @@
 use num_complex::Complex;
 use std::thread;
+use std::time::Instant;
 
 pub fn is_in_mandlebrot_set(complex_num: Complex<f64>, max_steps: i32) -> Option<i32> {
     let mut z = Complex::new(0.0, 0.0);
@@ -43,32 +44,35 @@ impl MandelbrotRenderParams {
 pub fn compute_set_vals_multithreaded(params: MandelbrotRenderParams, num_threads: u32) -> Vec<Option<i32>> {
     let num_rows_per_thread = params.pixel_height/num_threads;
     let mut handles = vec![];
+    let scale_per_pixel_y = params.mandelbrot_height/(params.pixel_height as f64);
 
     for i in 0..num_threads
     {
         let start_index = params.pixel_width*i*num_rows_per_thread;
         let size = num_rows_per_thread;
-        //let new_center_y = (i - num_threads/2)
+        let center_mandelbrot_cord = (params.mandelbrot_height/(num_threads as f64))*((i as i32 - (num_threads/2) as i32) as f64) + params.center_y;
+        println!("Center y cord: {}", center_mandelbrot_cord);
         let chunk_params = MandelbrotRenderParams {
             pixel_width: params.pixel_width,
             pixel_height: num_rows_per_thread,
             mandelbrot_width: params.mandelbrot_width,
             mandelbrot_height: params.mandelbrot_height/(num_threads as f64),
             center_x: params.center_x,
-            center_y: params.center_y,
-            steps: 100
+            center_y: center_mandelbrot_cord,
+            steps: 50
         };
 
-        let handle = thread::spawn(move || {
+        let handle = thread::spawn(move || -> Vec<Option<i32>> {
             compute_set_vals_naive(chunk_params)
         });
 
         handles.push(handle);
     }
 
+    //handles.remove(0).join().unwrap()
     handles.into_iter()
-        .flat_map(|h| h.join().unwrap())
-        .collect()
+       .flat_map(|h| h.join().unwrap())
+       .collect()
 }
 
 pub fn compute_set_vals_naive(params: MandelbrotRenderParams) -> Vec<Option<i32>> {
